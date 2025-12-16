@@ -8,11 +8,29 @@
       margin: 0;
       background: #020617;
       color: white;
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       text-align: center;
     }
 
     h2 { margin: 10px; }
+
+    #ad-zone {
+      margin: 10px auto;
+      max-width: 300px;
+      min-height: 250px;
+      background: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      color: #9ca3af;
+      font-size: 14px;
+    }
+
+    #score {
+      margin: 10px;
+      font-size: 18px;
+    }
 
     #game {
       width: 320px;
@@ -22,6 +40,138 @@
       position: relative;
       overflow: hidden;
       border-radius: 16px;
+      border: 3px solid #22c55e;
+    }
+
+    #player {
+      width: 40px;
+      height: 40px;
+      background: #22c55e;
+      position: absolute;
+      bottom: 40px;
+      left: 40px;
+      border-radius: 8px;
+    }
+
+    .obstacle {
+      width: 30px;
+      height: 50px;
+      background: #ef4444;
+      position: absolute;
+      bottom: 40px;
+      right: -30px;
+      border-radius: 6px;
+    }
+
+    #ground {
+      position: absolute;
+      bottom: 0;
+      height: 40px;
+      width: 100%;
+      background: #334155;
+    }
+
+    button {
+      margin: 10px;
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      background: #22c55e;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>🏃 Runner Game</h2>
+<p>Tap screen to JUMP</p>
+
+<!-- ✅ SAFE AD AREA -->
+<div id="ad-zone">
+  Ad will appear here
+</div>
+
+<div id="score">Score: 0</div>
+
+<div id="game">
+  <div id="player"></div>
+  <div id="ground"></div>
+</div>
+
+<button onclick="startGame()">Start Game</button>
+
+<script>
+let player = document.getElementById("player");
+let game = document.getElementById("game");
+let scoreText = document.getElementById("score");
+
+let jumping = false;
+let score = 0;
+let running = false;
+let scoreTimer, obstacleTimer;
+
+function startGame() {
+  if (running) return;
+  running = true;
+  score = 0;
+  scoreText.innerText = "Score: 0";
+
+  scoreTimer = setInterval(() => {
+    score++;
+    scoreText.innerText = "Score: " + score;
+  }, 500);
+
+  obstacleTimer = setInterval(createObstacle, 2000);
+}
+
+function jump() {
+  if (jumping || !running) return;
+  jumping = true;
+  let height = 0;
+
+  let up = setInterval(() => {
+    height += 5;
+    player.style.bottom = 40 + height + "px";
+    if (height >= 90) {
+      clearInterval(up);
+      let down = setInterval(() => {
+        height -= 5;
+        player.style.bottom = 40 + height + "px";
+        if (height <= 0) {
+          clearInterval(down);
+          jumping = false;
+        }
+      }, 20);
+    }
+  }, 20);
+}
+
+function createObstacle() {
+  let obs = document.createElement("div");
+  obs.className = "obstacle";
+  game.appendChild(obs);
+
+  let x = -30;
+  let move = setInterval(() => {
+    if (!running) {
+      clearInterval(move);
+      obs.remove();
+      return;
+    }
+
+    x += 5;
+    obs.style.right = x + "px";
+
+    let p = player.getBoundingClientRect();
+    let o = obs.getBoundingClientRect();
+
+    if (
+      p.right > o.left &&
+      p.left <
+
 <body>
 
 <!-- TITLE -->
