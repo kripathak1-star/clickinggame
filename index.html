@@ -1,58 +1,110 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mini Runner</title>
+  <title>Super Runner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       margin: 0;
-      overflow: hidden;
-      background: #222;
+      background: #111;
       color: white;
       font-family: Arial;
       text-align: center;
+      user-select: none;
     }
     canvas {
-      background: linear-gradient(#555, #222);
+      background: linear-gradient(#444, #111);
       display: block;
       margin: auto;
     }
-    h2 {
-      margin: 5px;
-    }
+    h2 { margin: 6px; }
+    p { margin: 4px; }
   </style>
 </head>
 <body>
 
-<h2>🏃 Mini Runner (Subway Style)</h2>
+<h2>🔥 SUPER RUNNER 🔥</h2>
+<p>⬅️ ➡️ move | ⬆️ jump | ⬇️ slide</p>
 <canvas id="game" width="360" height="600"></canvas>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-let player = { x: 160, y: 500, w: 40, h: 40 };
+let lanes = [60, 160, 260];
+let laneIndex = 1;
+
+let player = {
+  x: lanes[laneIndex],
+  y: 480,
+  w: 40,
+  h: 40,
+  vy: 0,
+  jumping: false,
+  sliding: false
+};
+
 let obstacles = [];
+let coins = [];
 let score = 0;
-let speed = 3;
+let coinScore = 0;
+let speed = 4;
 let gameOver = false;
 
+// ---------- SPAWN ----------
 function spawnObstacle() {
   let lane = Math.floor(Math.random() * 3);
   obstacles.push({
-    x: 60 + lane * 120,
+    x: lanes[lane],
     y: -40,
     w: 40,
-    h: 40
+    h: 40,
+    type: Math.random() > 0.5 ? "high" : "low"
+  });
+}
+
+function spawnCoin() {
+  let lane = Math.floor(Math.random() * 3);
+  coins.push({
+    x: lanes[lane] + 10,
+    y: -30,
+    r: 10
   });
 }
 
 setInterval(spawnObstacle, 1200);
+setInterval(spawnCoin, 800);
 
+// ---------- CONTROLS ----------
 document.addEventListener("keydown", e => {
-  if (e.key === "ArrowLeft" && player.x > 60) player.x -= 120;
-  if (e.key === "ArrowRight" && player.x < 300) player.x += 120;
+  if (e.key === "ArrowLeft" && laneIndex > 0) laneIndex--;
+  if (e.key === "ArrowRight" && laneIndex < 2) laneIndex++;
+  if (e.key === "ArrowUp" && !player.jumping) {
+    player.vy = -12;
+    player.jumping = true;
+  }
+  if (e.key === "ArrowDown") {
+    player.sliding = true;
+    setTimeout(() => player.sliding = false, 400);
+  }
 });
 
+// ---------- UPDATE ----------
+function updatePlayer() {
+  player.x = lanes[laneIndex];
+  player.y += player.vy;
+  player.vy += 0.6;
+
+  if (player.y >= 480) {
+    player.y = 480;
+    player.vy = 0;
+    player.jumping = false;
+  }
+
+  player.h = player.sliding ? 25 : 40;
+}
+
+// ---------- DRAW ----------
 function drawPlayer() {
   ctx.fillStyle = "#00ff99";
   ctx.fillRect(player.x, player.y, player.w, player.h);
@@ -64,7 +116,6 @@ function drawObstacles() {
     o.y += speed;
     ctx.fillRect(o.x, o.y, o.w, o.h);
 
-    // collision
     if (
       player.x < o.x + o.w &&
       player.x + player.w > o.x &&
@@ -76,26 +127,53 @@ function drawObstacles() {
   });
 }
 
+function drawCoins() {
+  ctx.fillStyle = "gold";
+  coins.forEach((c, i) => {
+    c.y += speed;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (
+      c.x > player.x &&
+      c.x < player.x + player.w &&
+      c.y > player.y &&
+      c.y < player.y + player.h
+    ) {
+      coinScore++;
+      coins.splice(i, 1);
+    }
+  });
+}
+
+// ---------- GAME LOOP ----------
 function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (gameOver) {
     ctx.fillStyle = "white";
-    ctx.font = "30px Arial";
-    ctx.fillText("GAME OVER", 90, 280);
-    ctx.fillText("Score: " + score, 110, 320);
+    ctx.font = "28px Arial";
+    ctx.fillText("GAME OVER", 80, 260);
+    ctx.font = "18px Arial";
+    ctx.fillText("Score: " + score, 120, 300);
+    ctx.fillText("Coins: " + coinScore, 120, 330);
+    ctx.fillText("Refresh to play again", 70, 370);
     return;
   }
 
+  updatePlayer();
   drawPlayer();
   drawObstacles();
+  drawCoins();
 
   score++;
-  if (score % 300 === 0) speed++;
+  if (score % 400 === 0) speed++;
 
   ctx.fillStyle = "white";
-  ctx.font = "18px Arial";
+  ctx.font = "16px Arial";
   ctx.fillText("Score: " + score, 10, 20);
+  ctx.fillText("Coins: " + coinScore, 10, 40);
 
   requestAnimationFrame(gameLoop);
 }
