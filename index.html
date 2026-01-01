@@ -5,24 +5,34 @@
 <title>Happy New Year</title>
 <style>
 body {
-  margin: 0;
-  background: black;
-  overflow: hidden;
+  margin:0;
+  background:black;
+  overflow:hidden;
   font-family: Arial, sans-serif;
 }
 h1 {
-  position: absolute;
-  width: 100%;
-  top: 40%;
-  text-align: center;
-  color: white;
-  font-size: 48px;
-  text-shadow: 0 0 30px gold;
+  position:absolute;
+  width:100%;
+  top:40%;
+  text-align:center;
+  color:white;
+  font-size:48px;
+  text-shadow:0 0 30px gold;
+  z-index: 10;
 }
 canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
+  position:fixed;
+  top:0;
+  left:0;
+}
+button {
+  position:absolute;
+  bottom:20px;
+  width:100%;
+  background:gold;
+  border:none;
+  font-size:20px;
+  padding:10px;
 }
 </style>
 </head>
@@ -30,19 +40,16 @@ canvas {
 <body>
 
 <h1>🎆 Happy New Year 🎆<br>From Krish ❤️</h1>
+<button onclick="start()">Tap to start sound 🔊</button>
 <canvas id="c"></canvas>
-<audio autoplay loop src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+
+<audio id="music" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" loop></audio>
 
 <script>
 var c = document.getElementById("c");
 var ctx = c.getContext("2d");
-
-function resize() {
-  c.width = window.innerWidth;
-  c.height = window.innerHeight;
-}
-resize();
-window.onresize = resize;
+c.width = innerWidth;
+c.height = innerHeight;
 
 var particles = [];
 
@@ -51,34 +58,37 @@ function firework() {
   var y = Math.random() * c.height / 2;
   for (var i = 0; i < 80; i++) {
     particles.push({
-      x: x,
-      y: y,
-      vx: Math.random() * 6 - 3,
-      vy: Math.random() * 6 - 3,
-      life: 100,
-      color: "hsl(" + Math.random() * 360 + ",100%,60%)"
+      x:x, y:y,
+      vx:Math.random()*6-3,
+      vy:Math.random()*6-3,
+      life:100,
+      color:"hsl("+Math.random()*360+",100%,60%)"
     });
   }
 }
 
 setInterval(firework, 1200);
 
-function animate() {
-  ctx.fillStyle = "rgba(0,0,0,0.2)";
-  ctx.fillRect(0, 0, c.width, c.height);
+function draw() {
+  ctx.fillStyle="rgba(0,0,0,0.2)";
+  ctx.fillRect(0,0,c.width,c.height);
 
-  for (var i = particles.length - 1; i >= 0; i--) {
-    var p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
+  for (var i=particles.length-1;i>=0;i--) {
+    var p=particles[i];
+    p.x+=p.vx;
+    p.y+=p.vy;
     p.life--;
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, 3, 3);
-    if (p.life <= 0) particles.splice(i, 1);
+    ctx.fillStyle=p.color;
+    ctx.fillRect(p.x,p.y,3,3);
+    if(p.life<=0) particles.splice(i,1);
   }
-  requestAnimationFrame(animate);
+  requestAnimationFrame(draw);
 }
-animate();
+draw();
+
+function start(){
+  document.getElementById("music").play();
+}
 </script>
 
 </body>
