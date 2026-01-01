@@ -1,200 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Super Runner</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      margin: 0;
-      background: #111;
-      color: white;
-      font-family: Arial;
-      text-align: center;
-      user-select: none;
-    }
-    canvas {
-      background: linear-gradient(#444, #111);
-      display: block;
-      margin: auto;
-    }
-    h2 { margin: 6px; }
-    p { margin: 4px; }
-  </style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Happy New Year</title>
+<style>
+body {
+  margin: 0;
+  background: black;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+h1 {
+  position: absolute;
+  width: 100%;
+  top: 40%;
+  text-align: center;
+  color: white;
+  font-size: 48px;
+  text-shadow: 0 0 30px gold;
+}
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+</style>
 </head>
+
 <body>
 
-<h2>🔥 SUPER RUNNER 🔥</h2>
-<p>⬅️ ➡️ move | ⬆️ jump | ⬇️ slide</p>
-<canvas id="game" width="360" height="600"></canvas>
+<h1>🎆 Happy New Year 🎆<br>From Krish ❤️</h1>
+<canvas id="c"></canvas>
+<audio autoplay loop src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
 
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+var c = document.getElementById("c");
+var ctx = c.getContext("2d");
 
-let lanes = [60, 160, 260];
-let laneIndex = 1;
-
-let player = {
-  x: lanes[laneIndex],
-  y: 480,
-  w: 40,
-  h: 40,
-  vy: 0,
-  jumping: false,
-  sliding: false
-};
-
-let obstacles = [];
-let coins = [];
-let score = 0;
-let coinScore = 0;
-let speed = 4;
-let gameOver = false;
-
-// ---------- SPAWN ----------
-function spawnObstacle() {
-  let lane = Math.floor(Math.random() * 3);
-  obstacles.push({
-    x: lanes[lane],
-    y: -40,
-    w: 40,
-    h: 40,
-    type: Math.random() > 0.5 ? "high" : "low"
-  });
+function resize() {
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
 }
+resize();
+window.onresize = resize;
 
-function spawnCoin() {
-  let lane = Math.floor(Math.random() * 3);
-  coins.push({
-    x: lanes[lane] + 10,
-    y: -30,
-    r: 10
-  });
-}
+var particles = [];
 
-setInterval(spawnObstacle, 1200);
-setInterval(spawnCoin, 800);
-
-// ---------- CONTROLS ----------
-document.addEventListener("keydown", e => {
-  if (e.key === "ArrowLeft" && laneIndex > 0) laneIndex--;
-  if (e.key === "ArrowRight" && laneIndex < 2) laneIndex++;
-  if (e.key === "ArrowUp" && !player.jumping) {
-    player.vy = -12;
-    player.jumping = true;
+function firework() {
+  var x = Math.random() * c.width;
+  var y = Math.random() * c.height / 2;
+  for (var i = 0; i < 80; i++) {
+    particles.push({
+      x: x,
+      y: y,
+      vx: Math.random() * 6 - 3,
+      vy: Math.random() * 6 - 3,
+      life: 100,
+      color: "hsl(" + Math.random() * 360 + ",100%,60%)"
+    });
   }
-  if (e.key === "ArrowDown") {
-    player.sliding = true;
-    setTimeout(() => player.sliding = false, 400);
+}
+
+setInterval(firework, 1200);
+
+function animate() {
+  ctx.fillStyle = "rgba(0,0,0,0.2)";
+  ctx.fillRect(0, 0, c.width, c.height);
+
+  for (var i = particles.length - 1; i >= 0; i--) {
+    var p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x, p.y, 3, 3);
+    if (p.life <= 0) particles.splice(i, 1);
   }
-});
-
-// ---------- UPDATE ----------
-function updatePlayer() {
-  player.x = lanes[laneIndex];
-  player.y += player.vy;
-  player.vy += 0.6;
-
-  if (player.y >= 480) {
-    player.y = 480;
-    player.vy = 0;
-    player.jumping = false;
-  }
-
-  player.h = player.sliding ? 25 : 40;
+  requestAnimationFrame(animate);
 }
-
-// ---------- DRAW ----------
-function drawPlayer() {
-  ctx.fillStyle = "#00ff99";
-  ctx.fillRect(player.x, player.y, player.w, player.h);
-}
-
-function drawObstacles() {
-  ctx.fillStyle = "red";
-  obstacles.forEach(o => {
-    o.y += speed;
-    ctx.fillRect(o.x, o.y, o.w, o.h);
-
-    if (
-      player.x < o.x + o.w &&
-      player.x + player.w > o.x &&
-      player.y < o.y + o.h &&
-      player.y + player.h > o.y
-    ) {
-      gameOver = true;
-    }
-  });
-}
-
-function drawCoins() {
-  ctx.fillStyle = "gold";
-  coins.forEach((c, i) => {
-    c.y += speed;
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-    ctx.fill();
-
-    if (
-      c.x > player.x &&
-      c.x < player.x + player.w &&
-      c.y > player.y &&
-      c.y < player.y + player.h
-    ) {
-      coinScore++;
-      coins.splice(i, 1);
-    }
-  });
-}
-
-// ---------- GAME LOOP ----------
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  if (gameOver) {
-    ctx.fillStyle = "white";
-    ctx.font = "28px Arial";
-    ctx.fillText("GAME OVER", 80, 260);
-    ctx.font = "18px Arial";
-    ctx.fillText("Score: " + score, 120, 300);
-    ctx.fillText("Coins: " + coinScore, 120, 330);
-    ctx.fillText("Refresh to play again", 70, 370);
-    return;
-  }
-
-  updatePlayer();
-  drawPlayer();
-  drawObstacles();
-  drawCoins();
-
-  score++;
-  if (score % 400 === 0) speed++;
-
-  ctx.fillStyle = "white";
-  ctx.font = "16px Arial";
-  ctx.fillText("Score: " + score, 10, 20);
-  ctx.fillText("Coins: " + coinScore, 10, 40);
-
-  requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
+animate();
 </script>
 
 </body>
 </html>
-<div id="ad" style="display:none; text-align:center;">
-  <script type="text/javascript">
-    atOptions = {
-      'key' : '24a00f52a20520f5278358cea46b3d9c',
-      'format' : 'iframe',
-      'height' : 50,
-      'width' : 320,
-      'params' : {}
-    };
-  </script>
-  <script src="https://www.highperformanceformat.com/24a00f52a20520f5278358cea46b3d9c/invoke.js"></script>
-</div>
-
-document.getElementById("ad").style.display = "block";
-
